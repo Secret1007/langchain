@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+python-dotenv
+langchain
+langchain-community
+openai
+langchain-openai
+httpx[socks]
+# httpcore[socks]
+ConversationBufferMemory
