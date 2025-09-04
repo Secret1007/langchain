@@ -3,8 +3,11 @@ uvicorn
 python-dotenv
 langchain
 langchain-community
-openai
+langchain-text-splitters
+langchain-huggingface
 langchain-openai
+openai
+faiss-cpu
+sentence-transformers
 httpx[socks]
 # httpcore[socks]
-ConversationBufferMemory
