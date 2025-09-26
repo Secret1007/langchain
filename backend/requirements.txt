@@ -11,3 +11,5 @@ faiss-cpu
 sentence-transformers
 httpx[socks]
 # httpcore[socks]
+pypdf
+cryptography>=3.1
