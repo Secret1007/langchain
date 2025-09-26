@@ -1,0 +1,68 @@
+# ---- Global ----
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*.log
+*.tmp
+.temp/
+.tmp/
+*.bak
+
+# Dotenv / secrets
+.env
+.env.*
+*.env
+
+# IDE / Editor
+.vscode/
+.idea/
+*.iml
+
+# ---- Backend (Python) ----
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.pyre/
+.pytype/
+.ipynb_checkpoints/
+.cache/
+
+# Virtual envs
+.venv/
+venv/
+ENV/
+env/
+
+# Builds / dist
+build/
+dist/
+
+# LangChain vector indexes & caches (persisted at runtime)
+backend/indexes/
+backend/vectorstore/
+# keep folder structure if needed
+!backend/indexes/.gitkeep
+!backend/vectorstore/.gitkeep
+
+# ---- Frontend (React) ----
+frontend/node_modules/
+frontend/.parcel-cache/
+frontend/.cache/
+frontend/.vite/
+frontend/coverage/
+frontend/build/
+frontend/dist/
+
+# Optional: local dev tooling
+frontend/.eslintcache
+
+# Logs
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
