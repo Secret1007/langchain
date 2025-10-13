@@ -6,6 +6,7 @@ from langchain.memory import ConversationBufferMemory
 from langchain.agents import initialize_agent, Tool
 from services.tools import get_weather
 from services.rag_builder import query_vectorstore
+from services.english_checker import english_checker, WordCheckRequest, WordCheckResponse, SentenceCheckRequest, SentenceCheckResponse
 import os
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
@@ -117,6 +118,28 @@ async def ask(query: Query):
         ]
     }
 
+# 英语检查相关API端点
+
+@app.post("/api/check-word", response_model=WordCheckResponse)
+async def check_word(request: WordCheckRequest):
+    """检查单词拼写"""
+    return await english_checker.check_word(request)
+
+@app.post("/api/check-sentence", response_model=SentenceCheckResponse)
+async def check_sentence(request: SentenceCheckRequest):
+    """检查句子完整性和语法"""
+    return await english_checker.check_sentence(request)
+
+@app.post("/api/improve-text")
+async def improve_text(request: Query):
+    """获取文本改进建议"""
+    result = await english_checker.get_improvement_suggestions(request.question)
+    return result
+
+@app.get("/api/health")
+async def health_check():
+    """健康检查端点"""
+    return {"status": "healthy", "service": "english-checker"}
 
 if __name__ == "__main__":
     import uvicorn
