@@ -31,7 +31,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
+DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY") or os.getenv("OPENAI_API_KEY")
+DEEPSEEK_API_BASE = os.getenv("DEEPSEEK_API_BASE", "https://api.openai.com/v1")
 
 # 初始化记忆
 memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
@@ -58,8 +59,8 @@ tools = [
 async def ask(query: Query):
     llm = ChatOpenAI(
         openai_api_key=DEEPSEEK_API_KEY,
-        openai_api_base="https://api.deepseek.com/v1",
-        model_name="deepseek-chat",
+        openai_api_base=DEEPSEEK_API_BASE,
+        model_name="gpt-4o-mini",
         temperature=0.7
     )
     

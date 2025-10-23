@@ -1,5 +1,5 @@
 // 常见拼写错误字典
-const SPELLING_CORRECTIONS = {
+const SPELLING_CORRECTIONS: Record<string, string> = {
   'exprience': 'experience',
   'recieve': 'receive',
   'seperate': 'separate',
@@ -24,8 +24,15 @@ const SPELLING_CORRECTIONS = {
   'writting': 'writing'
 };
 
+// 语法规则接口
+interface GrammarRule {
+  pattern: RegExp;
+  suggestion: string;
+  reason: string;
+}
+
 // 常见语法规则
-const GRAMMAR_RULES = [
+const GRAMMAR_RULES: GrammarRule[] = [
   { pattern: /\binformations\b/gi, suggestion: "information", reason: "Uncountable noun: information (no plural)" },
   { pattern: /\bit's means\b/gi, suggestion: "it means", reason: "Remove apostrophe for possessive/verb form confusion" },
   { pattern: /\bvery\s+good\b/gi, suggestion: "great", reason: "Stronger, more natural word choice" },
@@ -40,14 +47,56 @@ const GRAMMAR_RULES = [
   { pattern: /\bwont\b/gi, suggestion: "won't", reason: "Contraction needs apostrophe" },
 ];
 
+// 问题接口
+export interface Issue {
+  start: number;
+  end: number;
+  text: string;
+  suggestion: string;
+  reason: string;
+  type: 'spelling' | 'grammar' | 'formatting';
+}
+
+// 单词检查结果接口
+export interface WordCheckResult {
+  word: string;
+  suggestion: string;
+  reason: string;
+  type: 'spelling';
+  position: number;
+}
+
+// 句子问题接口
+export interface SentenceIssue {
+  type: 'structure' | 'capitalization' | 'grammar' | 'spelling';
+  message: string;
+  suggestion: string;
+  wordIndex?: number;
+}
+
+// 句子检查结果接口
+export interface SentenceCheckResult {
+  sentence: string;
+  issues: SentenceIssue[];
+  wordCount: number;
+  isComplete: boolean;
+}
+
+// 实时输入分析结果接口
+export interface RealTimeAnalysisResult {
+  wordCheck: WordCheckResult | null;
+  sentenceCheck: SentenceCheckResult | null;
+  hasChanges: boolean;
+}
+
 // --- Pseudo AI revise & inline suggestions (mocked) ---
-export function pseudoAnalyze(content) {
-  const issues = [];
+export function pseudoAnalyze(content: string): Issue[] {
+  const issues: Issue[] = [];
   
   // 拼写检查
   Object.entries(SPELLING_CORRECTIONS).forEach(([wrong, correct]) => {
     const pattern = new RegExp(`\\b${wrong}\\b`, 'gi');
-    let match;
+    let match: RegExpExecArray | null;
     while ((match = pattern.exec(content)) !== null) {
       issues.push({
         start: match.index,
@@ -62,7 +111,7 @@ export function pseudoAnalyze(content) {
   
   // 语法规则检查
   GRAMMAR_RULES.forEach((rule) => {
-    let match;
+    let match: RegExpExecArray | null;
     while ((match = rule.pattern.exec(content)) !== null) {
       issues.push({
         start: match.index,
@@ -92,14 +141,13 @@ export function pseudoAnalyze(content) {
   return issues.sort((a, b) => a.start - b.start);
 }
 
-export function applySuggestion(content, issue) {
+export function applySuggestion(content: string, issue: Issue): string {
   return content.slice(0, issue.start) + issue.suggestion + content.slice(issue.end);
 }
 
 // 实时单词检查 - 检查当前输入的单词
-export function checkCurrentWord(content, cursorPosition) {
+export function checkCurrentWord(content: string, cursorPosition: number): WordCheckResult | null {
   const beforeCursor = content.slice(0, cursorPosition);
-  const afterCursor = content.slice(cursorPosition);
   
   // 获取当前单词
   const wordMatch = beforeCursor.match(/\b\w+$/);
@@ -123,9 +171,8 @@ export function checkCurrentWord(content, cursorPosition) {
 }
 
 // 句子完整性检测 - 当输入标点符号时触发
-export function checkSentenceCompleteness(content, cursorPosition) {
+export function checkSentenceCompleteness(content: string, cursorPosition: number): SentenceCheckResult | null {
   const beforeCursor = content.slice(0, cursorPosition);
-  const afterCursor = content.slice(cursorPosition);
   
   // 检测句子结束标点符号
   const sentenceEndings = /[.!?;]$/;
@@ -139,7 +186,7 @@ export function checkSentenceCompleteness(content, cursorPosition) {
   
   if (!currentSentence) return null;
   
-  const issues = [];
+  const issues: SentenceIssue[] = [];
   
   // 检查句子结构
   const words = currentSentence.split(/\s+/).filter(Boolean);
@@ -196,8 +243,8 @@ export function checkSentenceCompleteness(content, cursorPosition) {
 }
 
 // 实时输入分析 - 监听输入事件
-export function analyzeRealTimeInput(content, cursorPosition, lastChar) {
-  const results = {
+export function analyzeRealTimeInput(content: string, cursorPosition: number, lastChar: string): RealTimeAnalysisResult {
+  const results: RealTimeAnalysisResult = {
     wordCheck: null,
     sentenceCheck: null,
     hasChanges: false
@@ -217,3 +264,4 @@ export function analyzeRealTimeInput(content, cursorPosition, lastChar) {
   
   return results;
 }
+

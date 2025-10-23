@@ -1,6 +1,35 @@
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
-export async function askQuestion(question) {
+export interface CheckWordResponse {
+  word: string;
+  is_correct: boolean;
+  suggestions?: string[];
+  explanation?: string;
+}
+
+export interface CheckSentenceResponse {
+  sentence: string;
+  is_correct: boolean;
+  suggestions?: string[];
+  issues?: Array<{
+    type: string;
+    message: string;
+    suggestion?: string;
+  }>;
+}
+
+export interface ImproveTextResponse {
+  original: string;
+  improved: string;
+  changes?: string[];
+}
+
+export interface HealthResponse {
+  status: string;
+  message?: string;
+}
+
+export async function askQuestion(question: string): Promise<string> {
   const res = await fetch(`${API_BASE_URL}/ask`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -11,7 +40,7 @@ export async function askQuestion(question) {
 }
 
 // 英语检查API
-export async function checkWord(word, context = null) {
+export async function checkWord(word: string, context: string | null = null): Promise<CheckWordResponse> {
   const res = await fetch(`${API_BASE_URL}/api/check-word`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -25,7 +54,7 @@ export async function checkWord(word, context = null) {
   return await res.json();
 }
 
-export async function checkSentence(sentence, fullText = null) {
+export async function checkSentence(sentence: string, fullText: string | null = null): Promise<CheckSentenceResponse> {
   const res = await fetch(`${API_BASE_URL}/api/check-sentence`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -39,7 +68,7 @@ export async function checkSentence(sentence, fullText = null) {
   return await res.json();
 }
 
-export async function improveText(text) {
+export async function improveText(text: string): Promise<ImproveTextResponse> {
   const res = await fetch(`${API_BASE_URL}/api/improve-text`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -53,7 +82,8 @@ export async function improveText(text) {
   return await res.json();
 }
 
-export async function checkHealth() {
+export async function checkHealth(): Promise<HealthResponse> {
   const res = await fetch(`${API_BASE_URL}/api/health`);
   return await res.json();
 }
+

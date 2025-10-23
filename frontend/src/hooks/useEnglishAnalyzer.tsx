@@ -1,9 +1,19 @@
-import { useState, useEffect, useMemo } from 'react';
-import { pseudoAnalyze, applySuggestion } from '../utils/englishAnalyzer';
+import { useState, useEffect, useMemo, ReactNode } from 'react';
+import { pseudoAnalyze, applySuggestion, Issue } from '../utils/englishAnalyzer';
 
-export const useEnglishAnalyzer = (content) => {
-  const [issues, setIssues] = useState([]);
-  const [revised, setRevised] = useState("");
+interface UseEnglishAnalyzerReturn {
+  issues: Issue[];
+  revised: string;
+  highlighted: ReactNode;
+  handleRevise: () => Promise<void>;
+  handleApplySingle: (idx: number) => string | undefined;
+  handleApplyAll: () => string;
+  setRevised: (revised: string) => void;
+}
+
+export const useEnglishAnalyzer = (content: string): UseEnglishAnalyzerReturn => {
+  const [issues, setIssues] = useState<Issue[]>([]);
+  const [revised, setRevised] = useState<string>("");
 
   // live suggestions (debounced)
   useEffect(() => {
@@ -14,7 +24,7 @@ export const useEnglishAnalyzer = (content) => {
   // highlighted preview for issues
   const highlighted = useMemo(() => {
     if (!issues.length) return <span>{content || ""}</span>;
-    const parts = [];
+    const parts: ReactNode[] = [];
     let last = 0;
     issues.forEach((iss, idx) => {
       parts.push(<span key={"t" + idx + "a"}>{content.slice(last, iss.start)}</span>);
@@ -30,7 +40,7 @@ export const useEnglishAnalyzer = (content) => {
   }, [content, issues]);
 
   // classic Revise button (mock)
-  const handleRevise = async () => {
+  const handleRevise = async (): Promise<void> => {
     const revisedText = content
       .replace(/\b(I am|I'm)\b/g, "I am")
       .replace(/\bvery\s+good\b/gi, "great")
@@ -38,13 +48,13 @@ export const useEnglishAnalyzer = (content) => {
     setRevised(revisedText);
   };
 
-  const handleApplySingle = (idx) => {
+  const handleApplySingle = (idx: number): string | undefined => {
     const issue = issues[idx];
     if (!issue) return;
     return applySuggestion(content, issue);
   };
 
-  const handleApplyAll = () => {
+  const handleApplyAll = (): string => {
     let updated = content;
     // apply from end to start to avoid shifting indices
     [...issues].reverse().forEach((iss) => {
@@ -63,3 +73,4 @@ export const useEnglishAnalyzer = (content) => {
     setRevised,
   };
 };
+

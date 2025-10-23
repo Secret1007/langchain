@@ -4,6 +4,10 @@ from openai import OpenAI
 import json
 import re
 from pydantic import BaseModel
+from dotenv import load_dotenv
+
+# 加载环境变量
+load_dotenv()
 
 class WordCheckRequest(BaseModel):
     word: str
@@ -28,16 +32,19 @@ class SentenceCheckResponse(BaseModel):
 
 class EnglishChecker:
     def __init__(self):
-        # 初始化OpenAI客户端
-        api_key = os.getenv("OPENAI_API_KEY") or os.getenv("DEEPSEEK_API_KEY")
+        # 初始化OpenAI客户端 - 使用OpenAI API（英文能力更强）
+        api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
-            raise ValueError("API key is required. Please set OPENAI_API_KEY or DEEPSEEK_API_KEY environment variable.")
+            raise ValueError("OPENAI_API_KEY is required. Please set it in .env file.")
+        
+        base_url = os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1")
         
         self.client = OpenAI(
             api_key=api_key,
-            base_url=os.getenv("OPENAI_API_BASE", "https://api.deepseek.com/v1")
+            base_url=base_url
         )
-        self.model = os.getenv("OPENAI_MODEL", "deepseek-chat")
+        # 使用gpt-4o-mini，性价比高且英文能力强
+        self.model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
         
     async def check_word(self, request: WordCheckRequest) -> WordCheckResponse:
         """检查单词拼写和用法"""
