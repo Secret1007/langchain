@@ -61,69 +61,16 @@ export const RevisionPanel: React.FC<RevisionPanelProps> = ({
         checkConnection();
     }, []);
 
-    // 实时AI检查功能
-    const performRealTimeCheck = async (text: string, cursorPos: number): Promise<void> => {
-        if (!apiConnected) return;
+    // 已禁用旧的实时检查功能
+    // 现在使用 WebSocket 实时检查完整句子的语法
+    // 不再检查单个单词，只检查完整句子
 
-        try {
-            setIsLoading(true);
-
-            // 获取光标前的单词
-            const beforeCursor = text.slice(0, cursorPos);
-            const wordMatch = beforeCursor.match(/\b\w+$/);
-            const currentWord = wordMatch ? wordMatch[0] : '';
-
-            // AI检查单词
-            if (currentWord && /[a-zA-Z]/.test(currentWord)) {
-                const wordResult = await checkWord(currentWord, text);
-                if (wordResult && !wordResult.is_correct) {
-                    setWordCheck({
-                        word: currentWord,
-                        suggestion: wordResult.suggestions?.[0] || '',
-                        reason: wordResult.explanation || '',
-                        confidence: (wordResult as any).confidence,
-                        position: cursorPos - currentWord.length
-                    });
-                }
-            }
-
-            // AI检查句子（如果输入了标点符号）
-            const lastChar = text[cursorPos - 1];
-            if (lastChar && /[.!?;]/.test(lastChar)) {
-                const sentences = beforeCursor.split(/[.!?;]/);
-                const currentSentence = sentences[sentences.length - 1].trim();
-
-                if (currentSentence) {
-                    const sentenceResult = await checkSentence(currentSentence, text);
-                    if (sentenceResult) {
-                        setSentenceCheck({
-                            sentence: currentSentence,
-                            issues: sentenceResult.issues || [],
-                            suggestions: sentenceResult.suggestions || [],
-                            overallScore: (sentenceResult as any).overall_score || 0,
-                            explanation: (sentenceResult as any).explanation || ''
-                        });
-                    }
-                }
-            }
-
-        } catch (error) {
-            console.error('AI check failed:', error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    // 监听内容变化进行实时AI检查
+    // 监听内容变化 - 仅用于调试，不进行自动检查
     useEffect(() => {
-        if (content && apiConnected) {
-            const debounceTimer = setTimeout(() => {
-                performRealTimeCheck(content, content.length);
-            }, 500);
-
-            return () => clearTimeout(debounceTimer);
-        }
-    }, [content, apiConnected]);
+        // 清空旧的检查结果，避免误导用户
+        setWordCheck(null);
+        setSentenceCheck(null);
+    }, [content]);
 
     // 应用实时建议
     const applyRealTimeSuggestion = (type: string, suggestion: string): void => {

@@ -1,7 +1,7 @@
 import React from 'react'
 import { Card, CardHeader, CardTitle, CardContent, Button, Input, Badge, Alert, AlertTitle, AlertDescription } from './ui'
 
-export default function ComponentShowcase(): React.JSX.Element {
+export default function ComponentShowcase(): React.ReactElement {
     return (
         <div className="p-8 space-y-8">
             <h1 className="text-3xl font-bold">shadcn/ui 组件展示</h1>

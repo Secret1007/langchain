@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 from langchain_openai import ChatOpenAI
 from langchain.prompts import PromptTemplate
@@ -10,6 +10,9 @@ from services.english_checker import english_checker, WordCheckRequest, WordChec
 import os
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
+import json
+import re
+from typing import Dict, List
 
 load_dotenv()
 
@@ -141,6 +144,149 @@ async def improve_text(request: Query):
 async def health_check():
     """健康检查端点"""
     return {"status": "healthy", "service": "english-checker"}
+
+# WebSocket连接管理
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: Dict[str, WebSocket] = {}
+        self.user_contexts: Dict[str, Dict] = {}
+
+    async def connect(self, websocket: WebSocket, client_id: str):
+        await websocket.accept()
+        self.active_connections[client_id] = websocket
+        self.user_contexts[client_id] = {
+            "current_text": "",
+            "last_sentence": "",
+            "session_started": False
+        }
+
+    def disconnect(self, client_id: str):
+        if client_id in self.active_connections:
+            del self.active_connections[client_id]
+        if client_id in self.user_contexts:
+            del self.user_contexts[client_id]
+
+    async def send_message(self, message: dict, client_id: str):
+        if client_id in self.active_connections:
+            await self.active_connections[client_id].send_text(json.dumps(message))
+
+manager = ConnectionManager()
+
+def detect_sentence_end(text: str) -> List[str]:
+    """检测文本中完整的句子"""
+    # 简单的句子分割，基于标点符号
+    sentences = re.split(r'([.!?。！？]+)', text)
+    complete_sentences = []
+    
+    for i in range(0, len(sentences) - 1, 2):
+        if i + 1 < len(sentences):
+            sentence = (sentences[i] + sentences[i + 1]).strip()
+            if sentence:
+                complete_sentences.append(sentence)
+    
+    return complete_sentences
+
+@app.websocket("/ws/writing-assistant/{client_id}")
+async def websocket_endpoint(websocket: WebSocket, client_id: str):
+    """WebSocket端点用于实时写作辅助"""
+    await manager.connect(websocket, client_id)
+    
+    try:
+        # 发送欢迎消息
+        await manager.send_message({
+            "type": "connected",
+            "message": "✅ AI写作助手已连接！开始输入，我会在每句话完成后帮你检查语法和表达。"
+        }, client_id)
+        
+        while True:
+            # 接收消息
+            data = await websocket.receive_text()
+            message = json.loads(data)
+            
+            msg_type = message.get("type")
+            context = manager.user_contexts[client_id]
+            
+            if msg_type == "start_session":
+                # 开始写作会话
+                context["session_started"] = True
+                await manager.send_message({
+                    "type": "session_started",
+                    "message": "🖊️ 开始写日记吧！我会在每句话结束后给你反馈。"
+                }, client_id)
+            
+            elif msg_type == "text_update":
+                # 文本更新
+                current_text = message.get("text", "")
+                context["current_text"] = current_text
+                
+                # 检测完整的句子
+                sentences = detect_sentence_end(current_text)
+                
+                if sentences:
+                    last_sentence = sentences[-1]
+                    
+                    # 如果是新句子，进行检查
+                    if last_sentence != context["last_sentence"]:
+                        context["last_sentence"] = last_sentence
+                        
+                        # 发送正在分析的状态
+                        await manager.send_message({
+                            "type": "analyzing",
+                            "sentence": last_sentence
+                        }, client_id)
+                        
+                        # 调用英语检查器
+                        try:
+                            sentence_check = await english_checker.check_sentence(
+                                SentenceCheckRequest(
+                                    sentence=last_sentence,
+                                    full_text=current_text
+                                )
+                            )
+                            
+                            # 发送检查结果
+                            await manager.send_message({
+                                "type": "feedback",
+                                "sentence": last_sentence,
+                                "is_complete": sentence_check.is_complete,
+                                "issues": sentence_check.issues,
+                                "suggestions": sentence_check.suggestions,
+                                "score": sentence_check.overall_score,
+                                "explanation": sentence_check.explanation
+                            }, client_id)
+                            
+                        except Exception as e:
+                            await manager.send_message({
+                                "type": "error",
+                                "message": f"检查时出错: {str(e)}"
+                            }, client_id)
+            
+            elif msg_type == "request_improvement":
+                # 请求全文改进建议
+                text = message.get("text", "")
+                try:
+                    improvement = await english_checker.get_improvement_suggestions(text)
+                    await manager.send_message({
+                        "type": "improvement",
+                        "data": improvement
+                    }, client_id)
+                except Exception as e:
+                    await manager.send_message({
+                        "type": "error",
+                        "message": f"获取改进建议时出错: {str(e)}"
+                    }, client_id)
+            
+            elif msg_type == "ping":
+                # 心跳检测
+                await manager.send_message({
+                    "type": "pong"
+                }, client_id)
+                
+    except WebSocketDisconnect:
+        manager.disconnect(client_id)
+    except Exception as e:
+        print(f"WebSocket error for client {client_id}: {e}")
+        manager.disconnect(client_id)
 
 if __name__ == "__main__":
     import uvicorn

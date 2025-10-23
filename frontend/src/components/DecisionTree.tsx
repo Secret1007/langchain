@@ -20,7 +20,7 @@ interface DecisionTreeProps {
     decisionLog?: DecisionLog | null;
 }
 
-export default function DecisionTree({ decisionLog }: DecisionTreeProps): React.JSX.Element | null {
+export default function DecisionTree({ decisionLog }: DecisionTreeProps): React.ReactElement | null {
     if (!decisionLog) return null;
 
     return (

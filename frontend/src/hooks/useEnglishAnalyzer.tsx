@@ -15,9 +15,19 @@ export const useEnglishAnalyzer = (content: string): UseEnglishAnalyzerReturn =>
   const [issues, setIssues] = useState<Issue[]>([]);
   const [revised, setRevised] = useState<string>("");
 
-  // live suggestions (debounced)
+  // live suggestions (debounced) - 只在有完整句子时才分析
   useEffect(() => {
-    const t = setTimeout(() => setIssues(pseudoAnalyze(content)), 300);
+    const t = setTimeout(() => {
+      // 只有当文本包含句子结束符时才进行分析
+      // 避免检查未完成的单词
+      const hasCompleteSentence = /[.!?。！？]/.test(content);
+      if (hasCompleteSentence) {
+        setIssues(pseudoAnalyze(content));
+      } else {
+        // 清空之前的问题，避免误导
+        setIssues([]);
+      }
+    }, 2000); // 增加防抖时间到2秒，给用户充足时间
     return () => clearTimeout(t);
   }, [content]);
 
