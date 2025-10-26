@@ -29,6 +29,8 @@ class SentenceCheckResponse(BaseModel):
     suggestions: List[Dict[str, Any]]
     overall_score: float
     explanation: str
+    polished_sentence: Optional[str] = None  # AI 润色后的地道表达
+    polished_explanation: Optional[str] = None  # 为什么这样改的解释
 
 class EnglishChecker:
     def __init__(self):
@@ -117,7 +119,7 @@ class EnglishChecker:
     async def check_sentence(self, request: SentenceCheckRequest) -> SentenceCheckResponse:
         """检查句子完整性和语法"""
         prompt = f"""
-你是一个专业的英语语法和写作检查器。请检查以下句子的完整性和语法：
+你是一个专业的英语语法和写作检查器。请检查以下句子的完整性和语法，并提供native speaker的地道表达：
 
 句子: "{request.sentence}"
 完整文本: "{request.full_text or '无'}"
@@ -142,7 +144,9 @@ class EnglishChecker:
         }}
     ],
     "overall_score": 0.85,
-    "explanation": "整体评价和建议"
+    "explanation": "整体评价和建议",
+    "polished_sentence": "这里给出润色后的、更地道的native speaker表达。即使原句正确，也要提供一个更自然、更流畅的版本",
+    "polished_explanation": "简要解释为什么要这样改，包括：用词选择、语法结构、自然度等方面的考虑（用中文解释，50字以内）"
 }}
 
 评分标准：
@@ -184,7 +188,9 @@ class EnglishChecker:
                         issues=[],
                         suggestions=[],
                         overall_score=1.0,
-                        explanation="无法解析AI响应"
+                        explanation="无法解析AI响应",
+                        polished_sentence=None,
+                        polished_explanation=None
                     )
                     
         except Exception as e:
@@ -194,7 +200,9 @@ class EnglishChecker:
                 issues=[],
                 suggestions=[],
                 overall_score=1.0,
-                explanation=f"检查服务暂时不可用: {str(e)}"
+                explanation=f"检查服务暂时不可用: {str(e)}",
+                polished_sentence=None,
+                polished_explanation=None
             )
 
     async def get_improvement_suggestions(self, text: str) -> Dict[str, Any]:

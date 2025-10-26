@@ -26,3 +26,5 @@ export const SentenceDetectionIndicator: React.FC<SentenceDetectionIndicatorProp
     );
 };
 
+
+

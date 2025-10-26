@@ -13,6 +13,8 @@ interface RealtimeFeedbackProps {
         suggestions?: any[];
         score?: number;
         explanation?: string;
+        polished_sentence?: string;
+        polished_explanation?: string;
     } | null;
     isAnalyzing: boolean;
 }
@@ -88,8 +90,34 @@ export const RealtimeFeedback: React.FC<RealtimeFeedbackProps> = ({
 
                     {/* 被分析的句子 */}
                     {lastFeedback.sentence && (
-                        <div className="p-3 bg-white rounded-md border border-gray-200">
-                            <p className="text-sm text-gray-700 italic">"{lastFeedback.sentence}"</p>
+                        <div className="space-y-2">
+                            <div className="p-3 bg-white rounded-md border border-gray-200">
+                                <p className="text-xs text-gray-500 mb-1">你的句子:</p>
+                                <p className="text-sm text-gray-700 italic">"{lastFeedback.sentence}"</p>
+                            </div>
+
+                            {/* AI Polish 后的地道表达 */}
+                            {lastFeedback.polished_sentence && (
+                                <div className="p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-md border border-green-300 space-y-2">
+                                    <div className="flex items-center gap-2">
+                                        <Badge className="bg-green-600 text-white text-xs">✨ Native 表达</Badge>
+                                        {lastFeedback.polished_sentence === lastFeedback.sentence && (
+                                            <span className="text-xs text-green-700">（已经很地道了！）</span>
+                                        )}
+                                    </div>
+                                    <p className="text-sm text-green-900 font-medium italic">"{lastFeedback.polished_sentence}"</p>
+
+                                    {/* 为什么这样改的解释 */}
+                                    {lastFeedback.polished_explanation && (
+                                        <div className="pt-2 border-t border-green-200">
+                                            <p className="text-xs text-green-800">
+                                                <span className="font-semibold">💡 为什么这样改：</span>
+                                                <span className="ml-1">{lastFeedback.polished_explanation}</span>
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     )}
 

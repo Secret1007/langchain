@@ -5,7 +5,6 @@ import { useWebSocket } from "../hooks/useWebSocket";
 import { Entry } from "../utils/storage";
 import { Navigation } from "./Navigation";
 import { Editor } from "./Editor";
-import { RevisionPanel } from "./RevisionPanel";
 import { EntriesList } from "./EntriesList";
 import { RealtimeFeedback } from "./RealtimeFeedback";
 
@@ -272,7 +271,7 @@ export default function EnglishJournal(): React.ReactElement {
             {activeTab === "write" ? (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* 编辑器 */}
-                    <div className="lg:col-span-1">
+                    <div className="lg:col-span-2">
                         <Editor
                             title={title}
                             setTitle={setTitle}
@@ -307,17 +306,6 @@ export default function EnglishJournal(): React.ReactElement {
                                 isAnalyzing={isAnalyzing}
                             />
                         </div>
-                    </div>
-
-                    {/* 修订面板 */}
-                    <div className="lg:col-span-1">
-                        <RevisionPanel
-                            issues={issues}
-                            revised={revised}
-                            content={content}
-                            onApplySingle={handleApplySingleClick}
-                            onRevise={handleReviseClick}
-                        />
                     </div>
                 </div>
             ) : (

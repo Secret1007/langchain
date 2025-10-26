@@ -252,7 +252,9 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
                                 "issues": sentence_check.issues,
                                 "suggestions": sentence_check.suggestions,
                                 "score": sentence_check.overall_score,
-                                "explanation": sentence_check.explanation
+                                "explanation": sentence_check.explanation,
+                                "polished_sentence": sentence_check.polished_sentence,
+                                "polished_explanation": sentence_check.polished_explanation
                             }, client_id)
                             
                         except Exception as e:

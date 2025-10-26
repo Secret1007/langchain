@@ -9,6 +9,8 @@ export interface WebSocketMessage {
   suggestions?: any[];
   score?: number;
   explanation?: string;
+  polished_sentence?: string;
+  polished_explanation?: string;
   data?: any;
 }
 
@@ -159,4 +161,6 @@ export function useWebSocket(clientId: string): UseWebSocketReturn {
     connectionStatus,
   };
 }
+
+
 
